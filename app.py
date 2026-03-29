@@ -322,6 +322,8 @@ def normalize_price_frame(df) -> pd.DataFrame:
 def fetch_price_history(symbol: str, start_date: date, end_date: date, source_name: str) -> Tuple[pd.DataFrame, str]:
     symbol = symbol.strip().upper()
     attempted_sources = [source_name] if source_name != "AUTO" else ["VCI", "DNSE"]
+    errors = []
+
     for src in attempted_sources:
         try:
             from vnstock import Vnstock  # type: ignore
@@ -330,19 +332,31 @@ def fetch_price_history(symbol: str, start_date: date, end_date: date, source_na
             norm = normalize_price_frame(hist)
             if not norm.empty:
                 return norm, src
-        except Exception:
-            pass
+            errors.append(f"[{symbol} - {src}] Vnstock().stock trả về rỗng")
+        except Exception as e:
+            errors.append(f"[{symbol} - {src}] Vnstock().stock lỗi: {repr(e)}")
+
         try:
             from vnstock import stock_historical_data  # type: ignore
             hist = stock_historical_data(
-                symbol=symbol, start_date=str(start_date), end_date=str(end_date),
-                resolution="1D", type="stock", beautify=False, decor=False, source=src,
+                symbol=symbol,
+                start_date=str(start_date),
+                end_date=str(end_date),
+                resolution="1D",
+                type="stock",
+                beautify=False,
+                decor=False,
+                source=src,
             )
             norm = normalize_price_frame(hist)
             if not norm.empty:
                 return norm, src
-        except Exception:
-            pass
+            errors.append(f"[{symbol} - {src}] stock_historical_data trả về rỗng")
+        except Exception as e:
+            errors.append(f"[{symbol} - {src}] stock_historical_data lỗi: {repr(e)}")
+
+    st.session_state.setdefault("fetch_errors", {})
+    st.session_state["fetch_errors"][symbol] = errors
     return pd.DataFrame(), "N/A"
 
 
@@ -817,6 +831,9 @@ with st.spinner("Đang tải dữ liệu giá..."):
 
 if prices_raw.empty:
     st.error("Không có dữ liệu. Kiểm tra lại mã cổ phiếu, nguồn dữ liệu hoặc khoảng thời gian.")
+    if "fetch_errors" in st.session_state:
+        with st.expander("Chi tiết lỗi tải dữ liệu"):
+            st.write(st.session_state["fetch_errors"])
     st.stop()
 
 source_used = meta["source_used"]
