@@ -749,8 +749,8 @@ with st.sidebar:
         st.info("Đang bật chế độ đơn giản — chỉ hiển thị các chỉ số quan trọng nhất và giải thích bằng ngôn ngữ dễ hiểu.")
 
     st.markdown("---")
-    tickers_text = st.text_input("Mã cổ phiếu (cách nhau bằng dấu phẩy)", value=", ".join(DEFAULT_TICKERS))
-    benchmark = st.text_input("Chỉ số so sánh", value=VNINDEX_SYMBOL).strip().upper()
+    tickers_text = st.text_input("Mã cổ phiếu (in hoa, cách nhau bằng dấu phẩy)", value=", ".join(DEFAULT_TICKERS))
+    benchmark = st.text_input("Chỉ số so sánh (in hoa, vd: VNINDEX)", value=VNINDEX_SYMBOL).strip().upper()
     data_source = st.selectbox("Nguồn dữ liệu", ["AUTO", "KBS", "MSN", "FMP", "VCI"], index=0)
 
     preset = st.selectbox("Khoảng thời gian", ["1M", "3M", "6M", "1Y", "3Y", "5Y", "MAX"], index=3)
